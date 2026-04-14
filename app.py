@@ -16,9 +16,8 @@ app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://bargain-ai-project-git-main-aimlwithbobbybalyans-projects.vercel.app",  
+    "https://bargainai-project.vercel.app",
 ])
-
 UPLOAD_FOLDER = "uploads"
 DB_PATH       = "bargainai.db"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
