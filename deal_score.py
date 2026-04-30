@@ -1,7 +1,3 @@
-# BargainAI - Deal Score Calculator
-# Developer: Bobby Balyan
-# Improvement: normalized scoring — skips missing factors instead of penalizing
-
 def calculate_deal_score(seller_price, vision_result, market_data):
     """
     Calculates overall deal score 0-100.
