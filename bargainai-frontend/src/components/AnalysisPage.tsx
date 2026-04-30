@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'https://bargainai-project.onrender.com';
 
-
 const gadgetOptions = [
   { id: 'smartphone', name: 'Smartphone' },
   { id: 'laptop', name: 'Laptop' },
@@ -95,17 +94,24 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
   useEffect(() => {
     if (!loading) return;
+
     const timers = [200, 1200, 2400, 3600, 4800].map((delay, index) =>
       setTimeout(() => setStep(index), delay)
     );
+
     return () => timers.forEach(clearTimeout);
   }, [loading]);
 
   const handleFiles = (fileList: FileList | null) => {
     if (!fileList) return;
+
     const selected = Array.from(fileList).slice(0, 4);
+
     setImages((prev) => [...prev, ...selected].slice(0, 4));
-    setPreviews((prev) => [...prev, ...selected.map((file) => URL.createObjectURL(file))].slice(0, 4));
+    setPreviews((prev) =>
+      [...prev, ...selected.map((file) => URL.createObjectURL(file))].slice(0, 4)
+    );
+
     setActiveImg(0);
   };
 
@@ -117,16 +123,21 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
   const toggleIssue = (issue: string) => {
     setIssues((prev) =>
-      prev.includes(issue) ? prev.filter((item) => item !== issue) : [...prev, issue]
+      prev.includes(issue)
+        ? prev.filter((item) => item !== issue)
+        : [...prev, issue]
     );
   };
 
   const addCustomIssue = () => {
     const trimmed = customIssue.trim();
+
     if (!trimmed) return;
+
     if (!issues.includes(trimmed)) {
       setIssues((prev) => [...prev, trimmed]);
     }
+
     setCustomIssue('');
   };
 
@@ -143,29 +154,46 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
     setError('');
     setLoading(true);
+    setStep(0);
 
     const formData = new FormData();
-    images.forEach((image) => formData.append('images', image));
+
+    images.forEach((image) => {
+      formData.append('images', image);
+    });
+
     formData.append('seller_price', price);
     formData.append('usage_period', usage || 'not mentioned');
     formData.append('gadget_type', gadget);
     formData.append('user_issues', issues.join(', '));
+
     if (deviceModel.trim()) {
       formData.append('device_model', deviceModel.trim());
     }
 
     try {
-      const response = await axios.post(`${API}/api/analyse`, formData);
+      const response = await axios.post(`${API}/api/analyse`, formData, {
+        timeout: 120000,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
       onComplete({
         ...response.data,
         uploadedPreviews: previews,
       });
     } catch (err: any) {
-      setError(
-        err?.message?.includes('Network')
-          ? 'Backend is not running. Start the Flask server and try again.'
-          : err?.response?.data?.error || err?.message || 'Analysis failed.'
-      );
+      console.error('Analysis request failed:', err);
+
+      if (err.code === 'ECONNABORTED') {
+        setError('Backend is taking too long. Render may be waking up. Wait 30 seconds and try again.');
+      } else if (!err.response) {
+        setError('Cannot connect to backend. Check Render URL, CORS, or wait for backend to wake up.');
+      } else {
+        setError(err?.response?.data?.error || 'Analysis failed. Please try again.');
+      }
+
       setLoading(false);
     }
   };
@@ -183,7 +211,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
           <h2 className="text-2xl font-bold mb-2">Analyzing your input</h2>
           <p className="text-sm text-gray-400 mb-8">
-            Please wait while the system processes the uploaded images and pricing data.
+            Please wait. Render free hosting can take extra time on the first request.
           </p>
 
           <div className="space-y-3">
@@ -222,10 +250,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
     <div className="min-h-screen bg-[#0b0b0b] text-white">
       <nav className="border-b border-[#1f1f1f] bg-[#0b0b0b]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
-          >
+          <button onClick={onBack} className="text-sm text-gray-400 hover:text-white">
             Back
           </button>
 
@@ -248,7 +273,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Deal Analysis Form</h1>
           <p className="text-gray-400">
-            Upload the gadget images and enter the available details for analysis.
+            Upload gadget images and enter details for AI-based deal analysis.
           </p>
         </div>
 
@@ -265,7 +290,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
                   setGadget(item.id);
                   setIssues([]);
                 }}
-                className={`px-4 py-2.5 rounded-xl border text-sm transition-colors ${
+                className={`px-4 py-2.5 rounded-xl border text-sm ${
                   gadget === item.id
                     ? 'border-orange-500 bg-orange-500/10 text-orange-400'
                     : 'border-[#2a2a2a] text-gray-300 hover:border-[#3a3a3a]'
@@ -284,7 +309,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
           {previews.length === 0 ? (
             <div
-              className="border-2 border-dashed border-[#333333] rounded-2xl px-6 py-12 text-center cursor-pointer hover:border-orange-500/40 transition-colors"
+              className="border-2 border-dashed border-[#333333] rounded-2xl px-6 py-12 text-center cursor-pointer hover:border-orange-500/40"
               onClick={() => fileRef.current?.click()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -315,7 +340,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
 
                 <button
                   onClick={() => removeImage(activeImg)}
-                  className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-red-500/90 hover:bg-red-600 text-white text-xs transition-colors"
+                  className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-red-500/90 hover:bg-red-600 text-white text-xs"
                 >
                   Remove
                 </button>
@@ -338,22 +363,13 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
                             : 'border-[#333333] hover:border-[#4a4a4a]'
                         }`}
                       />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeImage(index);
-                        }}
-                        className="absolute -top-1.5 -right-1.5 hidden group-hover:flex w-5 h-5 rounded-full bg-red-500 text-white text-xs items-center justify-center"
-                      >
-                        ×
-                      </button>
                     </div>
                   ))}
 
                   {previews.length < 4 && (
                     <button
                       onClick={() => fileRef.current?.click()}
-                      className="w-16 h-16 rounded-xl border-2 border-dashed border-[#333333] hover:border-orange-500/40 text-gray-400 transition-colors"
+                      className="w-16 h-16 rounded-xl border-2 border-dashed border-[#333333] hover:border-orange-500/40 text-gray-400"
                     >
                       Add
                     </button>
@@ -379,27 +395,21 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">Seller Price</label>
-              <input
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b] text-white outline-none focus:border-orange-500/50"
-                placeholder="Enter price in INR"
-              />
-            </div>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b]"
+              placeholder="Seller price in INR"
+            />
 
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">Usage Period</label>
-              <input
-                type="text"
-                value={usage}
-                onChange={(e) => setUsage(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b] text-white outline-none focus:border-orange-500/50"
-                placeholder="Example: 8 months"
-              />
-            </div>
+            <input
+              type="text"
+              value={usage}
+              onChange={(e) => setUsage(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b]"
+              placeholder="Usage period, example: 8 months"
+            />
           </div>
         </div>
 
@@ -412,13 +422,9 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
             type="text"
             value={deviceModel}
             onChange={(e) => setDeviceModel(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b] text-white outline-none focus:border-orange-500/50"
-            placeholder="Example: Samsung Galaxy S22, iPhone 13, Dell Inspiron 15"
+            className="w-full px-4 py-3 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b]"
+            placeholder="Example: Samsung Galaxy S22, iPhone 13"
           />
-
-          <p className="text-xs text-gray-500 mt-2">
-            This field is optional, but it improves market price accuracy.
-          </p>
         </div>
 
         <div className="rounded-2xl border border-[#202020] bg-[#111111] p-6 mb-5">
@@ -431,7 +437,7 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
               <button
                 key={item}
                 onClick={() => toggleIssue(item)}
-                className={`px-3 py-1.5 rounded-full border text-xs transition-colors ${
+                className={`px-3 py-1.5 rounded-full border text-xs ${
                   issues.includes(item)
                     ? 'border-orange-500/60 bg-orange-500/10 text-orange-400'
                     : 'border-[#2a2a2a] text-gray-400 hover:border-[#3a3a3a]'
@@ -442,40 +448,38 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
             ))}
           </div>
 
-          <div className="border-t border-[#1d1d1d] pt-4">
-            <div className="text-xs text-gray-500 mb-2">Add custom issue</div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customIssue}
-                onChange={(e) => setCustomIssue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') addCustomIssue();
-                }}
-                className="flex-1 px-3 py-2 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b] text-white text-sm outline-none focus:border-orange-500/50"
-                placeholder="Example: Water damage, Face ID issue, missing charger"
-              />
-              <button
-                onClick={addCustomIssue}
-                className="px-4 py-2 rounded-xl border border-[#333333] bg-[#1a1a1a] hover:bg-[#222222] text-white text-sm transition-colors"
-              >
-                Add
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customIssue}
+              onChange={(e) => setCustomIssue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addCustomIssue();
+              }}
+              className="flex-1 px-3 py-2 rounded-xl border border-[#2a2a2a] bg-[#0b0b0b]"
+              placeholder="Example: Water damage, Face ID issue"
+            />
 
-            {customIssues.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {customIssues.map((item) => (
-                  <span
-                    key={item}
-                    className="px-3 py-1.5 rounded-lg border border-orange-500/20 bg-orange-500/10 text-orange-400 text-xs"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            )}
+            <button
+              onClick={addCustomIssue}
+              className="px-4 py-2 rounded-xl border border-[#333333] bg-[#1a1a1a]"
+            >
+              Add
+            </button>
           </div>
+
+          {customIssues.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {customIssues.map((item) => (
+                <span
+                  key={item}
+                  className="px-3 py-1.5 rounded-lg border border-orange-500/20 bg-orange-500/10 text-orange-400 text-xs"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && (
@@ -487,14 +491,14 @@ export default function AnalysisPage({ onComplete, onBack }: Props) {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={submit}
-            className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium transition-colors"
+            className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-medium"
           >
             Analyze Deal
           </button>
 
           <button
             onClick={onBack}
-            className="px-6 py-3 rounded-xl border border-[#2a2a2a] text-gray-300 hover:bg-[#151515] transition-colors"
+            className="px-6 py-3 rounded-xl border border-[#2a2a2a] text-gray-300 hover:bg-[#151515]"
           >
             Cancel
           </button>
