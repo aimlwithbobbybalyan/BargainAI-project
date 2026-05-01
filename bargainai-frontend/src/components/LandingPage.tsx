@@ -207,7 +207,7 @@ export default function LandingPage({ onStart, onBudget }: Props) {
               </button>
 
               <a
-                href="https://github.com/aimlwithbobbybalyan/BargainAI"
+                href="https://github.com/aimlwithbobbybalyan/BargainAI-project"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 rounded-xl border border-[#2a2a2a] text-sm text-gray-300 hover:bg-[#151515] transition-colors"
