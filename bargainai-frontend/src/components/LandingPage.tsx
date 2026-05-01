@@ -46,7 +46,7 @@ export default function LandingPage({ onStart, onBudget }: Props) {
 
   const handleCopyEmail = async () => {
     try {
-      await navigator.clipboard.writeText('your-email@example.com');
+      await navigator.clipboard.writeText('bobbybalyanaiml@gmail.com');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -191,7 +191,7 @@ export default function LandingPage({ onStart, onBudget }: Props) {
 
             <div className="flex md:justify-end flex-wrap gap-3">
               <a
-                href="https://www.linkedin.com/in/your-linkedin"
+                href="www.linkedin.com/in/bobby-balyan-9b1b1127a"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 rounded-xl border border-[#2a2a2a] text-sm text-gray-300 hover:bg-[#151515] transition-colors"
