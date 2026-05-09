@@ -69,6 +69,10 @@ export default function ResultsPage({
   };
 
   const negotiation = product?.negotiation_script || {};
+
+  // OLX uses hyphens in URL path, not encoded spaces
+  const olxSearchName = (product?.product_name || '').toLowerCase().replace(/\s+/g, '-');
+  // Other platforms use query params — encodeURIComponent is correct
   const searchName = encodeURIComponent(product?.product_name || '');
 
   const scripts = [
@@ -129,7 +133,7 @@ export default function ResultsPage({
     {
       name: 'OLX',
       color: 'bg-green-500',
-      url: `https://www.olx.in/items/q-${searchName}`,
+      url: `https://www.olx.in/items/q-${olxSearchName}?isSearchCall=true`,
     },
     {
       name: 'Amazon',

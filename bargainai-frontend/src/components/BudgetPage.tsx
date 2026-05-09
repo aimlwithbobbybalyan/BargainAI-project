@@ -19,7 +19,9 @@ const platforms: {
   {
     name: 'OLX',
     color: 'bg-green-500',
-    getUrl: (q: string) => `https://www.olx.in/items/q-${encodeURIComponent(q)}`,
+    // OLX uses hyphens in path, not encoded spaces
+    getUrl: (q: string) =>
+      `https://www.olx.in/items/q-${q.toLowerCase().replace(/\s+/g, '-')}`,
   },
   {
     name: 'Amazon',
